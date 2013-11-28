@@ -120,7 +120,6 @@ var mediumText = {
       // check if next word even exists
       if (i !== words_list.length - 1) {
         var w_next = mediumText.cleanString(words_list[i + 1]);
-        //doesn't trim string of punctuation - feature or bug? idk.
         var bigram = w.toLowerCase() + " " + w_next.toLowerCase();
         //maintain bigram associative array
         if (bigram in bigrams) {
@@ -131,12 +130,25 @@ var mediumText = {
       }
 
     }
-    sen_stats['bigrams'] = bigrams;
+    sen_stats['bigrams'] = mediumText.sortDictionary(bigrams);
     sen_stats['sentences'] = sentence_count;
-    sen_stats['proper'] = proper_nouns;
-    sen_stats['distribution'] = w_distr;
-    console.log(w_distr);
+    sen_stats['proper'] = mediumText.sortDictionary(proper_nouns);
+    sen_stats['distribution'] = mediumText.sortDictionary(w_distr);
     return sen_stats;
+  },
+
+  'sortDictionary' :  function(dictionary) {
+    var arr = []
+    for (var key in dictionary) {
+      if (dictionary.hasOwnProperty(key)) {
+        arr.push({'name': key, 'value' : dictionary[key]});
+      }
+    }
+
+    var sorted = arr.sort(function(a,b) {
+      return b.value - a.value;
+    });
+    return sorted;
   },
   
   //returns string with no punctuation & trimmed
