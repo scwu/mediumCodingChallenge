@@ -51,22 +51,28 @@ var mediumText = {
   },
 
   //get word count, sentence, bigram
-  // TO DO : off by one on sentence
+  // TO DO : proper nouns -> verbs associated with them
+  // Visualization of Distribution of words by length -> pie or bar chart
   'getSentenceStatistics' : function(full_text) {
     var sen_stats = {};
     var bigrams = {};
     var sentence_count = 0;
 
+    // get text split on spaces (also tokenizing words)
     var words_list = full_text.split(" ");
+    // get and assign word count
     sen_stats['words'] = words_list.length;
+
     for (var i = 0; i < words_list.length; i++) {
-      var w = words_list[i];
+      var w = $.trim(words_list[i]).toLowerCase();
+      //get last character of word and check if it's a period.
       if (w.slice(-1) === ".") {
         sentence_count++;
       }
       if (i !== words_list.length - 1) {
         //doesn't string string of punctuation - feature or bug? idk.
-        var bigram = words_list[i].toLowerCase() + " " + words_list[i+1].toLowerCase();
+        var bigram = w + " " + $.trim(words_list[i+1]).toLowerCase();
+        //maintain bigram associative array
         if (bigram in bigrams) {
           bigrams[bigram]++;
         } else {
