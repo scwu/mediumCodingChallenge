@@ -66,7 +66,6 @@ var mediumText = {
     sen_stats['words'] = words_list.length;
 
     var j = 0;
-    console.log(words_list);
     for (var i = 0; i < words_list.length; i++) {
 
       //get last character of word and check if it's a period.
@@ -133,7 +132,7 @@ var mediumText = {
     sen_stats['bigrams'] = mediumText.sortDictionary(bigrams);
     sen_stats['sentences'] = sentence_count;
     sen_stats['proper'] = mediumText.sortDictionary(proper_nouns);
-    sen_stats['distribution'] = mediumText.sortDictionary(w_distr);
+    sen_stats['distribution'] = w_distr;
     return sen_stats;
   },
 
@@ -170,7 +169,50 @@ var mediumText = {
     $stat_container.find('#paragraph').children('#p_number').text(numbers['paragraphs']);
     $stat_container.find('#sentence').children('#s_number').text(numbers['sentences']);
     $stat_container.find('#word').children('#w_number').text(numbers['words']);
+    $stat_container.find('#bigrams').children('ol').empty();
+    $stat_container.find('#bigrams').children('ol').append(mediumText.generateListHTML(numbers['bigrams']));
+
+    $stat_container.find('#proper').children('ol').empty();
+    $stat_container.find('#proper').children('ol').append(mediumText.generateListHTML(numbers['proper']));
+    mediumText.generateChartData(numbers['distribution']);
+
     // TO DO : set bigrams and sort in order before finishing (create ordered list for them)
+  },
+
+  'generateListHTML' : function(arr) {
+    html_list = [];
+    for (var i = 0; i < arr.length; i++) {
+      var name = arr[i]['name'];
+      var value = arr[i]['value'];
+      var html_s = '<li>' + name + ": " + value + '</li>';
+      html_list.push(html_s);
+    }
+    return html_list.join("");
+
+  },
+
+  'generateChartData' : function(distri) {
+    var keys = Object.keys(distri)
+    var sorted = keys.sort();
+    var value_ordered = [];
+    for (var i =0; i < sorted.length; i++) { 
+      value_ordered.push(distri[sorted[i]]);
+    }
+    console.log(sorted);
+    console.log(value_ordered);
+    var data = {
+	    labels : sorted,
+	    datasets : [
+		  {
+        fillColor : "rgba(220,220,220,0.5)",
+        strokeColor : "rgba(220,220,220,1)",
+        pointColor : "rgba(220,220,220,1)",
+        pointStrokeColor : "#fff",
+        data : value_ordered
+      }]
+    };
+    var ctx = $("#myChart").get(0).getContext("2d");
+    var newChart = new Chart(ctx).Line(data);
   }
 }
 
