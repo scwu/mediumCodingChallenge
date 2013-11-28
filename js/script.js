@@ -56,6 +56,8 @@ var mediumText = {
   'getSentenceStatistics' : function(full_text) {
     var sen_stats = {};
     var bigrams = {};
+    var proper_nouns = {};
+    var w_distr = {}
     var sentence_count = 0;
 
     // get text split on spaces (also tokenizing words)
@@ -63,15 +65,63 @@ var mediumText = {
     // get and assign word count
     sen_stats['words'] = words_list.length;
 
+    var j = 0;
+    console.log(words_list);
     for (var i = 0; i < words_list.length; i++) {
-      var w = $.trim(words_list[i]).toLowerCase();
+
       //get last character of word and check if it's a period.
-      if (w.slice(-1) === ".") {
+      if ($.trim(words_list[i]).slice(-1) === ".") {
         sentence_count++;
       }
+
+      var w = mediumText.cleanString(words_list[i]);
+      
+      //get word length distribution
+      if (w.length.toString() in w_distr) {
+        w_distr[w.length.toString()]++;
+      } else {
+        w_distr[w.length.toString()] = 1;
+      }
+
+      
+      // check if previous word even exists
+      if (j > 0) {
+
+        var full_proper = "";
+        var cleaned = mediumText.cleanString(words_list[j]);
+       
+        //get full proper noun - like (Mount Everest)
+        while (mediumText.isProperNoun(cleaned)) {
+          //check to make sure j+1 is valid index
+          if (j+1 <= words_list.length) {
+            full_proper += " " + cleaned;
+            cleaned = mediumText.cleanString(words_list[++j]);
+          } else {
+            break;
+          }
+        }
+        
+        //check for previous word to make sure isn't beginning of sentence
+        if ((words_list[i-1].slice(-1) !== "." || full_proper in proper_nouns
+            ) && full_proper !== "")  { //or if it already exist in the dictionary
+          
+          full_proper = $.trim(full_proper);
+
+          //add to proper noun associative array
+          if (full_proper in proper_nouns) {
+            proper_nouns[full_proper]++;
+          } else {
+            proper_nouns[full_proper] = 1;
+          }
+        }
+      }
+      j++;
+
+      // check if next word even exists
       if (i !== words_list.length - 1) {
-        //doesn't string string of punctuation - feature or bug? idk.
-        var bigram = w + " " + $.trim(words_list[i+1]).toLowerCase();
+        var w_next = mediumText.cleanString(words_list[i + 1]);
+        //doesn't trim string of punctuation - feature or bug? idk.
+        var bigram = w.toLowerCase() + " " + w_next.toLowerCase();
         //maintain bigram associative array
         if (bigram in bigrams) {
           bigrams[bigram]++;
@@ -79,10 +129,29 @@ var mediumText = {
           bigrams[bigram] = 1;
         }
       }
+
     }
     sen_stats['bigrams'] = bigrams;
     sen_stats['sentences'] = sentence_count;
+    sen_stats['proper'] = proper_nouns;
+    sen_stats['distribution'] = w_distr;
+    console.log(w_distr);
     return sen_stats;
+  },
+  
+  //returns string with no punctuation & trimmed
+  'cleanString' : function(word) {
+      //eliminate punctuation
+      var no_punct = $.trim(word).replace(/[\.,-\/#!$%\^&\*;:{}=\-_`~()]/g,""); //remove punctuation
+      var no_spaces = no_punct.replace(/\s{2,}/g," ");
+      return no_spaces
+  },
+
+  'isProperNoun' : function(noun) { 
+      if (noun.slice(0,1) !== noun.slice(0,1).toLowerCase() //make sure uppercase (not number either)
+          && noun.length > 1) { //make sure not not 'I' or number 
+            return true;
+      }
   },
 
   'setStats' : function($stat_container, numbers) {
